@@ -9,6 +9,10 @@ module Drivers
 
       defaults encoding: 'utf8', host: 'localhost', reconnect: true
 
+      def self.driver_type
+        'database'
+      end
+
       def setup
         handle_packages
       end
@@ -29,13 +33,21 @@ module Drivers
       # rubocop:enable Metrics/AbcSize
 
       def out_defaults
-        base = JSON.parse((node['deploy'][app['shortname']]['database'] || {}).to_json, symbolize_names: true)
+        base = JSON.parse((node['deploy'][app['shortname']][driver_type] || {}).to_json, symbolize_names: true)
         defaults.merge(base).merge(adapter: adapter)
       end
 
       def applicable_for_configuration?
         configuration_data_source == :node_engine || app['data_sources'].first.blank? || options[:rds].blank? ||
           app['data_sources'].first['arn'] == options[:rds]['rds_db_instance_arn']
+      end
+
+      def can_migrate?
+        true
+      end
+
+      def url(_deploy_dir)
+        "#{out[:adapter]}://#{out[:username]}:#{out[:password]}@#{out[:host]}/#{out[:database]}"
       end
 
       protected
@@ -45,8 +57,8 @@ module Drivers
       end
 
       def node_engine
-        node['deploy'][app['shortname']]['database'].try(:[], 'adapter') ||
-          node['defaults'].try(:[], 'database').try(:[], 'adapter')
+        node['deploy'][app['shortname']][driver_type].try(:[], 'adapter') ||
+          node['defaults'].try(:[], driver_type).try(:[], 'adapter')
       end
     end
   end

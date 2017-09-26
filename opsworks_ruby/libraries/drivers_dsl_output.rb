@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module Drivers
   module Dsl
     module Output
@@ -20,6 +21,12 @@ module Drivers
           out = out.select { |k, _v| output[:filter].include?(k.to_sym) }
         end
         out
+      end
+
+      def raw_out
+        node['defaults'][driver_type].merge(
+          node['deploy'][app['shortname']][driver_type] || {}
+        ).symbolize_keys
       end
     end
   end

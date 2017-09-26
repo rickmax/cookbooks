@@ -1,17 +1,18 @@
 # frozen_string_literal: true
+
 module Drivers
   module Framework
     class Hanami < Drivers::Framework::Base
       adapter :hanami
       allowed_engines :hanami
-      output filter: [
-        :migrate, :migration_command, :deploy_environment, :assets_precompile, :assets_precompilation_command
+      output filter: %i[
+        migrate migration_command deploy_environment assets_precompile assets_precompilation_command
       ]
 
       def raw_out
-        assets_command = node['deploy'][app['shortname']]['framework']['assets_precompilation_command'] ||
+        assets_command = node['deploy'][app['shortname']][driver_type]['assets_precompilation_command'] ||
                          '/usr/local/bin/bundle exec hanami assets precompile'
-        migration_command = node['deploy'][app['shortname']]['framework']['migration_command'] ||
+        migration_command = node['deploy'][app['shortname']][driver_type]['migration_command'] ||
                             '/usr/local/bin/bundle exec hanami db migrate'
 
         super.merge(
@@ -24,6 +25,7 @@ module Drivers
 
       def configure
         build_env
+        super
       end
 
       def deploy_before_restart

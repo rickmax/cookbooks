@@ -1,7 +1,9 @@
 # frozen_string_literal: true
+
 module Drivers
   module Framework
     class Base < Drivers::Base
+      include Drivers::Dsl::Logrotate
       include Drivers::Dsl::Output
       include Drivers::Dsl::Packages
 
@@ -9,12 +11,16 @@ module Drivers
         handle_packages
       end
 
+      def configure
+        configure_logrotate
+      end
+
       def deploy_before_migrate
         link_sqlite_database
       end
 
       def deploy_before_symlink
-        link_sqlite_database unless out[:migrate]
+        link_sqlite_database unless migrate?
       end
 
       def deploy_before_restart
@@ -25,13 +31,11 @@ module Drivers
         handle_output(raw_out)
       end
 
-      def raw_out
-        node['defaults']['framework'].merge(
-          node['deploy'][app['shortname']]['framework'] || {}
-        ).symbolize_keys
-      end
-
       def validate_app_engine; end
+
+      def migrate?
+        applicable_databases.any?(&:can_migrate?) && out[:migrate]
+      end
 
       protected
 
@@ -73,24 +77,17 @@ module Drivers
           not_if { ::File.exist?(::File.join(release_path, relative_db_path)) }
         end
       end
-      # rubocop:enable Metrics/MethodLength
+      # rubocop:enable Metrics/MethodLength, Metrics/AbcSize
 
       def database_url
         deploy_to = deploy_dir(app)
-        database_url = "sqlite://#{deploy_to}/shared/db/#{app['shortname']}_#{deploy_env}.sqlite"
-
-        Array.wrap(options[:databases]).each do |db|
-          next unless db.applicable_for_configuration?
-
-          database_url =
-            "#{db.out[:adapter]}://#{db.out[:username]}:#{db.out[:password]}@#{db.out[:host]}/#{db.out[:database]}"
-
-          database_url = "sqlite://#{deploy_to}/shared/#{db.out[:database]}" if db.out[:adapter].start_with?('sqlite')
-        end
-
-        database_url
+        applicable_databases.first.try(:url, deploy_to) ||
+          "sqlite://#{deploy_to}/shared/db/#{app['shortname']}_#{deploy_env}.sqlite"
       end
-      # rubocop:enable Metrics/AbcSize
+
+      def applicable_databases
+        Array.wrap(options[:databases]).select(&:applicable_for_configuration?)
+      end
 
       def environment
         app['environment'].merge(out[:deploy_environment])

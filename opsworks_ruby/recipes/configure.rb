@@ -1,10 +1,13 @@
 # frozen_string_literal: true
+
 #
 # Cookbook Name:: opsworks_ruby
 # Recipe:: configure
 #
 
 prepare_recipe
+
+include_recipe 'elasticsearch'
 
 every_enabled_application do |application|
   create_deploy_dir(application, File.join('shared'))

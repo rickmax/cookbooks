@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module Drivers
   module Appserver
     class Base < Drivers::Base
@@ -27,13 +28,11 @@ module Drivers
         handle_output(raw_out)
       end
 
-      def raw_out
-        node['defaults']['appserver'].merge(
-          node['deploy'][app['shortname']]['appserver'] || {}
-        ).symbolize_keys
-      end
-
       def validate_app_engine; end
+
+      def webserver_config_params
+        {}
+      end
 
       protected
 
@@ -128,6 +127,7 @@ module Drivers
       def environment
         framework = Drivers::Framework::Factory.build(context, app, options)
         app['environment'].merge(framework.out[:deploy_environment] || {})
+                          .merge('HOME' => node['deployer']['home'], 'USER' => node['deployer']['user'])
       end
     end
   end

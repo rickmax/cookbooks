@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module Drivers
   module Worker
     class Base < Drivers::Base
@@ -11,12 +12,6 @@ module Drivers
 
       def out
         handle_output(raw_out)
-      end
-
-      def raw_out
-        node['defaults']['worker'].merge(
-          node['deploy'][app['shortname']]['worker'] || {}
-        ).symbolize_keys
       end
 
       def validate_app_engine; end
@@ -37,6 +32,7 @@ module Drivers
       end
 
       def restart_monit
+        return if ENV['TEST_KITCHEN'] # Don't like it, but we can't run multiple processes in Docker on travis
         (1..process_count).each do |process_number|
           context.execute "monit restart #{adapter}_#{app['shortname']}-#{process_number}" do
             retries 3
@@ -59,6 +55,7 @@ module Drivers
       def environment
         framework = Drivers::Framework::Factory.build(context, app, options)
         app['environment'].merge(framework.out[:deploy_environment] || {})
+                          .merge('HOME' => node['deployer']['home'], 'USER' => node['deployer']['user'])
       end
     end
   end

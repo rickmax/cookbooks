@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module Drivers
   module Db
     class Sqlite < Base
@@ -10,6 +11,10 @@ module Drivers
         output = super
         output[:database] ||= 'db/data.sqlite3'
         handle_output(output)
+      end
+
+      def url(deploy_dir)
+        "sqlite://#{deploy_dir}/shared/#{out[:database]}"
       end
     end
   end

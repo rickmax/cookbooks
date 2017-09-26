@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module Drivers
   class Base
     attr_reader :app, :options, :configuration_data_source
@@ -24,6 +25,14 @@ module Drivers
     def self.adapters(options = { include_null: false })
       adapters = descendants.select { |descendant| descendant.respond_to?(:adapter) }.map(&:adapter)
       options[:include_null] ? adapters : adapters - ['null']
+    end
+
+    def self.driver_type
+      name.to_s.split('::')[1].downcase
+    end
+
+    def driver_type
+      self.class.driver_type
     end
 
     # Dummy methods for children to redefine

@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 source 'https://rubygems.org/'
 
 group :lint do
@@ -15,6 +16,8 @@ end
 
 group :chef do
   gem 'berkshelf'
+  gem 'chef', '11.10'
+  gem 'chef-zero'
   gem 'chefspec'
   gem 'kitchen-docker'
   gem 'kitchen-vagrant'

@@ -2,7 +2,7 @@
 
 [![Build Status](https://img.shields.io/travis/chef-cookbooks/apt.svg)][travis] [![Cookbook Version](https://img.shields.io/cookbook/v/apt.svg)][cookbook]
 
-This cookbook includes recipes to execute apt-get update to ensure the local APT package cache is up to date. There are recipes for managing the apt-cacher-ng caching proxy and proxy clients. It also includes a custom resource for managing APT repositories in /etc/apt/sources.list.d as well as an custom resource for pinning packages via /etc/apt/preferences.d.
+This cookbook includes recipes to execute apt-get update to ensure the local APT package cache is up to date. There are recipes for managing the apt-cacher-ng caching proxy and proxy clients. It also includes a custom resource for pinning packages via /etc/apt/preferences.d.
 
 ## Requirements
 
@@ -15,7 +15,7 @@ May work with or without modification on other Debian derivatives.
 
 ### Chef
 
-- Chef 12.1+
+- Chef 12.9+
 
 ### Cookbooks
 
@@ -133,7 +133,7 @@ To pull just security updates, set `origins_patterns` to something like `["origi
 - `['apt']['unattended_upgrades']['remove_unused_dependencies']` Do automatic removal of new unused dependencies after the upgrade. Defaults to false.
 - `['apt']['unattended_upgrades']['automatic_reboot']` - Automatically reboots _without confirmation_ if a restart is required after the upgrade. Defaults to false.
 - `['apt']['unattended_upgrades']['dl_limit']` - Limits the bandwidth used by apt to download packages. Value given as an integer in kb/sec. Defaults to nil (no limit).
-- `['apt']['unattended_upgrades']['random_sleep]'` - Wait a random number of seconds up to this value before running daily periodic apt actions. System default is 1800 seconds (30 minutes).
+- `['apt']['unattended_upgrades']['random_sleep']` - Wait a random number of seconds up to this value before running daily periodic apt actions. System default is 1800 seconds (30 minutes).
 
 ### Configuration for APT
 
@@ -151,99 +151,11 @@ There is an `interface_ipaddress` method that returns the IP address for a parti
 
 ## Resources/Providers
 
-### apt_repository
-
-This resource provides an easy way to manage additional APT repositories. Adding a new repository will notify running the `execute[apt-get-update]` resource immediately.
-
-#### Actions
-
-- `:add`: creates a repository file and builds the repository listing (default)
-- `:remove`: removes the repository file
-
-#### Attribute Parameters
-
-- repo_name: name attribute. The name of the channel to discover
-- uri: the base of the Debian distribution
-- distribution: this is usually your release's codename...ie something like `karmic`, `lucid` or `maverick`
-- components: package groupings... when in doubt use `main`
-- arch: constrain package to a particular arch like `i386`, `amd64` or even `armhf` or `powerpc`. Defaults to nil.
-- trusted: treat all packages from this repository as authenticated regardless of signature
-- deb_src: whether or not to add the repository as a source repo as well - value can be `true` or `false`, default `false`.
-- keyserver: the GPG keyserver where the key for the repo should be retrieved
-- key: if a `keyserver` is provided, this is assumed to be the fingerprint, otherwise it can be either the URI to the GPG key for the repo, or a cookbook_file.
-- key_proxy: if set, pass the specified proxy via `http-proxy=` to GPG.
-- cookbook: if key should be a cookbook_file, specify a cookbook where the key is located for files/default. Defaults to nil, so it will use the cookbook where the resource is used.
-
-#### Examples
-
-Add the Zenoss repo:
-
-```ruby
-apt_repository 'zenoss' do
-  uri        'http://dev.zenoss.org/deb'
-  components ['main', 'stable']
-end
-```
-
-Enable Ubuntu [multiverse](https://help.ubuntu.com/community/Repositories/Ubuntu) repositories:
-
-```ruby
-apt_repository 'security-ubuntu-multiverse' do
-  uri          'http://security.ubuntu.com/ubuntu'
-  distribution 'trusty-security'
-  components   ['multiverse']
-  deb_src      true
-end
-```
-
-Add the Nginx PPA, autodetect the key and repository url:
-
-```ruby
-apt_repository 'nginx-php' do
-  uri          'ppa:nginx/stable'
-  distribution node['lsb']['codename']
-end
-```
-
-Add the JuJu PPA, grab the key from the keyserver, and add source repo:
-
-```ruby
-apt_repository 'juju' do
-  uri 'http://ppa.launchpad.net/juju/stable/ubuntu'
-  components ['main']
-  distribution 'trusty'
-  key 'C8068B11'
-  keyserver 'keyserver.ubuntu.com'
-  action :add
-  deb_src true
-end
-```
-
-Add the Cloudera Repo of CDH4 packages for Ubuntu 12.04 on AMD64:
-
-```ruby
-apt_repository 'cloudera' do
-  uri          'http://archive.cloudera.com/cdh4/ubuntu/precise/amd64/cdh'
-  arch         'amd64'
-  distribution 'precise-cdh4'
-  components   ['contrib']
-  key          'http://archive.cloudera.com/debian/archive.key'
-end
-```
-
-Remove Zenoss repo:
-
-```ruby
-apt_repository 'zenoss' do
-  action :remove
-end
-```
-
 ### apt_preference
 
 This resource provides an easy way to pin packages in /etc/apt/preferences.d. Although apt-pinning is quite helpful from time to time please note that Debian does not encourage its use without thorough consideration.
 
-Further information regarding apt-pinning is available via <http://wiki.debian.org/AptPreferences>.
+Further information regarding apt-pinning is available via <https://wiki.debian.org/AptPreferences>.
 
 #### Actions
 
@@ -255,7 +167,7 @@ Further information regarding apt-pinning is available via <http://wiki.debian.o
 - package_name: name attribute. The name of the package
 - glob: Pin by glob() expression or regexp surrounded by /.
 - pin: The package version/repository to pin
-- pin_priority: The pinning priority aka "the highest package version wins"
+- pin_priority: The pinning priority aka "the highest package version wins" (required)
 
 #### Examples
 
@@ -302,11 +214,26 @@ Put `recipe[apt::cacher-ng]` in the run_list for a server to provide APT caching
 
 If you want to cleanup unused packages, there is also the `apt-get autoclean` and `apt-get autoremove` resources provided for automated cleanup.
 
-## License & Authors
+### apt_repository
 
-**Author:** Cookbook Engineering Team ([cookbooks@chef.io](mailto:cookbooks@chef.io))
+The apt_repository resource has been moved into chef-client in Chef 12.9.
 
-**Copyright:** 2009-2016, Chef Software, Inc.
+See <https://docs.chef.io/resource_apt_repository.html> for usage details
+
+### apt_update
+
+The apt_update resource has been moved into chef-client in Chef 12.7.
+
+See <https://docs.chef.io/resource_apt_update.html> for usage details
+
+## Maintainers
+
+This cookbook is maintained by Chef's Community Cookbook Engineering team. Our goal is to improve cookbook quality and to aid the community in contributing to cookbooks. To learn more about our team, process, and design goals see our [team documentation](https://github.com/chef-cookbooks/community_cookbook_documentation/blob/master/COOKBOOK_TEAM.MD). To learn more about contributing to cookbooks like this see our [contributing documentation](https://github.com/chef-cookbooks/community_cookbook_documentation/blob/master/CONTRIBUTING.MD), or if you have general questions about this cookbook come chat with us in #cookbok-engineering on the [Chef Community Slack](http://community-slack.chef.io/)
+
+## License
+
+
+**Copyright:** 2009-2017, Chef Software, Inc.
 
 ```
 Licensed under the Apache License, Version 2.0 (the "License");
