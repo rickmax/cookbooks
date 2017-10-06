@@ -31,7 +31,6 @@ include_recipe 'rbenv::ruby_build'
 include_recipe 'rbenv::rbenv_vars'
 include_recipe 'nvm'
 include_recipe 'nodejs'
-include_recipe 'services'
 
 execute 'sudo service redis start'
 
