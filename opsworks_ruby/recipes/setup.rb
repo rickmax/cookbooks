@@ -27,7 +27,6 @@ include_recipe 'runit::default'
 package 'redis-server'
 execute 'apt-get install libsqlite3-dev -y'
 package 'sqlite'
-
 include_recipe 'elasticsearch'
 include_recipe 'sidekiq'
 include_recipe 'rbenv::default'
